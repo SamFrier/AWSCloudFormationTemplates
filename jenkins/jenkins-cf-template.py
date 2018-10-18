@@ -15,11 +15,26 @@ from troposphere import (
     Ref,
     Template,
 )
+from troposphere.iam import (
+    InstanceProfile,
+    PolicyType as IAMPolicy,
+    Role,
+)
+
+from awacs.aws import (
+    Action,
+    Allow,
+    Policy,
+    Principal,
+    Statement,
+)
+
+from awacs.sts import AssumeRole
 
 # Variable definitions
 
-ApplicationName = "helloworld"
-ApplicationPort = "3000"
+ApplicationName = "jenkins"
+ApplicationPort = "8080"
 
 PublicCidrIp = str(ip_network(get_ip()))
 
@@ -74,6 +89,27 @@ ud = Base64(Join('\n', [
     "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
 ]))
 
+# IAM role
+t.add_resource(Role(
+    "Role",
+    AssumeRolePolicyDocument=Policy(
+        Statement=[
+            Statement(
+                Effect=Allow,
+                Action=[AssumeRole],
+                Principal=Principal("Service", ["ec2.amazonaws.com"])
+            )
+        ]
+    )
+))
+
+# Instance profile
+t.add_resource(InstanceProfile(
+    "InstanceProfile",
+    Path="/",
+    Roles=[Ref("Role")]
+))
+
 # EC2 instance
 t.add_resource(ec2.Instance(
     "instance",
@@ -82,6 +118,7 @@ t.add_resource(ec2.Instance(
     SecurityGroups=[Ref("SecurityGroup")],
     KeyName=Ref("KeyPair"),
     UserData=ud,
+    IamInstanceProfile=Ref("InstanceProfile"),
 ))
 
 # Outputs

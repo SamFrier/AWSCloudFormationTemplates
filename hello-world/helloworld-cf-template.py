@@ -19,14 +19,20 @@ from troposphere import (
 ApplicationPort = "3000"
 PublicCidrIp = str(ip_network(get_ip()))
 
+# Create the template
+
 t = Template()
 t.add_description("Effective DevOps in AWS: HelloWorld web application")
+
+# Key pair
 t.add_parameter(Parameter(
     "KeyPair",
     Description="Name of an existing EC2 KeyPair to SSH",
     Type="AWS::EC2::KeyPair::KeyName",
     ConstraintDescription="must be the name of an existing EC2 KeyPair",
 ))
+
+# Security group
 t.add_resource(ec2.SecurityGroup(
     "SecurityGroup",
     GroupDescription="Allow SSH and TCP/{} access".format(ApplicationPort),
@@ -46,6 +52,7 @@ t.add_resource(ec2.SecurityGroup(
     ],
 ))
 
+# Startup script
 ud = Base64(Join('\n', [
     "#!/bin/bash",
     "sudo yum install --enablerepo=epel -y nodejs",
@@ -54,6 +61,7 @@ ud = Base64(Join('\n', [
     "start helloworld"
 ]))
 
+# EC2 instance
 t.add_resource(ec2.Instance(
     "instance",
     ImageId="ami-f976839e",
@@ -63,6 +71,7 @@ t.add_resource(ec2.Instance(
     UserData=ud,
 ))
 
+# Outputs
 t.add_output(Output(
     "InstancePublicIp",
     Description="Public IP of our instance",
