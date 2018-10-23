@@ -50,7 +50,7 @@ AnsiblePullCmd = \
 # Create the template
 
 t = Template()
-t.add_description("Effective DevOps in AWS: HelloWorld web application")
+t.add_description("Effective DevOps in AWS: Jenkins server")
 
 # Key pair
 t.add_parameter(Parameter(
@@ -69,7 +69,7 @@ t.add_resource(ec2.SecurityGroup(
             IpProtocol="tcp",
             FromPort="22",
             ToPort="22",
-            CidrIp=PublicCidrIp,
+            CidrIp="0.0.0.0/0",
         ),
         ec2.SecurityGroupRule(
             IpProtocol="tcp",
